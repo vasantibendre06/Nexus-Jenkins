@@ -30,12 +30,23 @@
         		<plugin>
             			<groupId>org.apache.maven.plugins</groupId>
             			<artifactId>maven-war-plugin</artifactId>
-            			<version>2.2</version>
+            			<version>3.3.1</version>
             			<configuration>
                 			<webXml>src/main/webapp/WEB-INF/web.xml</webXml>
             			</configuration>
         		</plugin>
     		</plugins>
 	</build>
+	<distributionManagement>
+    <repository>
+        <id>nexus-releases</id>
+        <url>http://18.118.17.172:8081/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+        <id>nexus-snapshots</id>
+        <url>http://18.118.17.172:8081/repository/maven-snapshots/</url>
+    </snapshotRepository>
+</distributionManagement>
+
 
 </project>
