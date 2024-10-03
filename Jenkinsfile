@@ -21,7 +21,7 @@ pipeline {
                                                    type: 'zip']],
                                       credentialsId: 'nexusCredential',
                                       groupId: 'com.example',
-                                      nexusUrl: 'http://18.222.76.81:8081/#admin/repository/repositories:Nexus-Jenkins',
+                                      nexusUrl: 'http://18.222.76.81:8081',
                                       nexusVersion: 'nexus3',
                                       protocol: 'http',
                                       repository: 'Nexus-Jenkins',
