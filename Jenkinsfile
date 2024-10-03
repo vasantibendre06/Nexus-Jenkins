@@ -1,92 +1,29 @@
 pipeline {
     agent any
-    tools {
-        maven "localMaven"
-        jdk "Java11"
-    }
-
-    environment {
-        // This can be nexus3 or nexus2
-        NEXUS_VERSION = "nexus3"
-        // This can be http or https
-        NEXUS_PROTOCOL = "http"
-        // Where your Nexus is running
-        NEXUS_URL = "18.118.17.172:8081"
-        // Repository where we will upload the artifact
-        NEXUS_REPOSITORY = "Nexus-Jenkins"
-        // Jenkins credential id to authenticate to Nexus OSS
-        NEXUS_CREDENTIAL_ID = "nexusCredential"
-        ARTIFACT_VERSION = "${BUILD_NUMBER}"
-    }
 
     stages {
-        stage("Check out") {
+        stage('Clone Repository') {
             steps {
-                script {
-                    git branch: 'main', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git';
-                }
+                git branch: 'main', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
             }
         }
 
-        stage("mvn build") {
+        stage('Archive Website') {
             steps {
-                script {
-                    sh "mvn clean package"
-                }
+                sh 'zip -r website.zip .'
             }
         }
 
-        stage("publish to nexus") {
+        stage('Upload to Nexus') {
             steps {
-                script {
-                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
-                    pom = readMavenPom file: "pom.xml";
-                    // Find built artifact under target folder
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    // Print some info from the artifact found
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    // Extract the path from the File found
-                    artifactPath = filesByGlob[0].path;
-                    // Assign to a boolean response verifying If the artifact name exists
-                    artifactExists = fileExists artifactPath;
-
-                    if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: ARTIFACT_VERSION,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                // Artifact generated such as .jar, .ear and .war files.
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging]
-                            ]
-                        );
-
-                    } else {
-                        error "*** File: ${artifactPath}, could not be found";
-                    }
-                }
-            }
-        }
-        stage ('Execute Ansible Play - CD'){
-            agent {
-                label 'ansible'
-            }
-            steps{
-                script {
-                    git branch: 'main', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git';
-                }
-                sh '''
-                    ansible-playbook -e vers=${BUILD_NUMBER} roles/site.yml
-                '''
+                nexusArtifactUploader artifacts: [[artifactId: 'website',
+                                                   file: 'website.zip',
+                                                   type: 'zip']],
+                                      credentialsId: 'nexusCredential',
+                                      groupId: 'com.example',
+                                      nexusUrl: 'http://18.222.76.81:8081/#admin/repository/repositories:Nexus-Jenkins',
+                                      repository: 'Nexus-Jenkins',
+                                      version: '1.0'
             }
         }
     }
