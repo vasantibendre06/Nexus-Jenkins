@@ -28,5 +28,12 @@ pipeline {
                                       version: '1.0'
             }
         }
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'nexusCredential', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
+    }
+}
+
+        
     }
 }
