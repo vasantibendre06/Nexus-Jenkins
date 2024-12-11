@@ -1,39 +1,43 @@
 pipeline {
     agent any
 
+    environment {
+        NEXUS_URL = 'http://20.127.187.253:8081'
+        NEXUS_REPO = 'poc1_1'
+        NEXUS_CREDENTIALS_ID = 'nexus' // Jenkins credentials ID for Nexus
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
+                git 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
             }
         }
 
-        stage('Archive Website') {
+        stage('Build Website') {
             steps {
-                sh 'zip -r website.zip .'
+                sh 'npm install'
+                sh 'npm run build' // Adjust for your build process
             }
         }
 
         stage('Upload to Nexus') {
             steps {
-                nexusArtifactUploader artifacts: [[artifactId: 'website',
-                                                   file: 'website.zip',
-                                                   type: 'zip']],
-                                      credentialsId: 'nexusCredential',
-                                      groupId: 'com.example',
-                                      nexusUrl: 'http://18.222.76.81:8081',
-                                      nexusVersion: 'nexus3',
-                                      protocol: 'http',
-                                      repository: 'Nexus-Jenkins',
-                                      version: '1.0'
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: "${NEXUS_URL}",
+                        groupId: 'com.example',
+                        version: "${BUILD_NUMBER}",
+                        repository: "${NEXUS_REPO}",
+                        credentialsId: "${NEXUS_CREDENTIALS_ID}",
+                        artifacts: [
+                            [artifactId: 'static-website', classifier: '', file: 'build.zip', type: 'zip']
+                        ]
+                    )
+                }
             }
         }
-        stage('Checkout') {
-            steps {
-                git credentialsId: 'nexusCredential', url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
-    }
-}
-
-        
     }
 }
