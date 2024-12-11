@@ -10,7 +10,8 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
+                git branch: 'main',
+                    url: 'https://github.com/vasantibendre06/Nexus-Jenkins.git'
             }
         }
 
